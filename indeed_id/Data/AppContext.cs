@@ -37,7 +37,7 @@ namespace indeed_id.Data
             var walletId = 1;
             foreach (var user in Users)
             {
-                var currencies = allCurrencies.Take(rnd.Next(1, 3));
+                var currencies = allCurrencies.Take(rnd.Next(2, 4));
                 foreach (var c in currencies)
                 {
                     Wallets.Add(new Wallet{Id = walletId, Amount = rnd.Next(0, 1000000), Currency = c, UserId = user.Id});

@@ -23,7 +23,7 @@ namespace indeed_id.Controllers
             _walletService = walletService;
         }
 
-        [HttpPost]
+        [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] Move model)
         {
             var result = await _walletService.Deposit(model.UserId, model.Currency, model.Amount);
@@ -32,7 +32,7 @@ namespace indeed_id.Controllers
             
             return BadRequest(_errMessage);
         }
-        [HttpPost]
+        [HttpPost("withdraw")]
         public async Task<IActionResult> Withdraw([FromBody] Move model)
         {
             var result = await _walletService.Withdraw(model.UserId, model.Currency, model.Amount);
@@ -41,7 +41,7 @@ namespace indeed_id.Controllers
 
             return BadRequest(_errMessage);
         }
-        [HttpPost]
+        [HttpPost("convert")]
         public async Task<IActionResult> Convert([FromBody] Convert model)
         {
             var result = await _walletService.Convert(model.UserId, model.FromCurrency, model.ToCurrency, model.Amount);
@@ -51,7 +51,7 @@ namespace indeed_id.Controllers
             return BadRequest(_errMessage);
         }
 
-        [HttpGet]
+        [HttpGet("info")]
         public async Task<IActionResult> Info(int userId)
         {
             var result = await _walletService.Info(userId);

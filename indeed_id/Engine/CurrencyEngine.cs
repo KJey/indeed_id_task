@@ -18,13 +18,13 @@ namespace indeed_id.Engine
             var client = new RestClient("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml");
             var request = new RestRequest(Method.GET);
             var response = await client.ExecuteAsync(request);
-            CurrencyIntegration result = new CurrencyIntegration();
-            XmlSerializer serializer = new XmlSerializer(typeof(CurrencyIntegration));
+            Envelope result = new Envelope();
+            XmlSerializer serializer = new XmlSerializer(typeof(Envelope));
             if (response.IsSuccessful)
             {
                 using (TextReader reader = new StringReader(response.Content))
                 {
-                    result = (CurrencyIntegration)serializer.Deserialize(reader);
+                    result = (Envelope)serializer.Deserialize(reader);
                 }
 
                 return result.Cube.Cube1.Cube.FirstOrDefault(x=>x.currency==currency).rate;
