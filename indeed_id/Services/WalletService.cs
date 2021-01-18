@@ -1,0 +1,96 @@
+﻿using indeed_id.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using indeed_id.Engine;
+
+namespace indeed_id.Services
+{
+    public class WalletService : IWalletService
+    {
+        private readonly IWalletEngine _walletEngine;
+        private readonly IUserEngine _userEngine;
+        private readonly ICurrencyEngine _currencyEngine;
+
+        public WalletService(IWalletEngine walletEngine, IUserEngine userEngine, ICurrencyEngine currencyEngine)
+        {
+            _walletEngine = walletEngine;
+            _userEngine = userEngine;
+            _currencyEngine = currencyEngine;
+        }
+
+        public async Task<bool> Convert(int userId, string fromCurrency, string toCurrency, decimal amount)
+        {
+            var fromWallet = await _walletEngine.Get(userId, fromCurrency);
+            var toWallet = await _walletEngine.Get(userId, toCurrency);
+            if (fromWallet == null || toWallet == null) return false;
+
+            if (fromWallet.Amount < amount) return false;
+
+            decimal? fromCurrencyRate = 1;
+            decimal? toCurrencyRate = 1;
+            if (fromCurrency != "EUR")
+                fromCurrencyRate = await _currencyEngine.GetRate(fromCurrency);
+            if (toCurrency != "EUR")
+                toCurrencyRate = await _currencyEngine.GetRate(toCurrency);
+
+            if (fromCurrencyRate == null || toCurrencyRate == null) return false;
+
+            fromWallet.Amount -= amount;
+            toWallet.Amount += Math.Round(((amount/fromCurrencyRate.Value) * toCurrencyRate.Value),2);
+
+            await _walletEngine.Update(fromWallet);
+            await _walletEngine.Update(toWallet);
+
+            return true;
+        }
+
+        public async Task<bool> Deposit(int userId, string currency, decimal amount)
+        {
+            var wallet = await _walletEngine.Get(userId, currency);
+
+            if (wallet == null)
+            {
+                return false;
+            }
+
+            wallet.Amount += amount;
+            await _walletEngine.Update(wallet);
+
+            return true;
+        }
+
+        public async Task<object> Info(int userId = 1)
+        {
+            var user = await _userEngine.Get(userId);
+            var wallets = await _walletEngine.List(userId);
+
+            return new
+            {
+                UserName = user.Name,
+                Wallets = wallets
+            };
+        }
+
+        public async Task<bool> Withdraw(int userId, string currency, decimal amount)
+        {
+            var wallet = await _walletEngine.Get(userId, currency);
+
+            if (wallet == null)
+            {
+                return false;
+            }
+
+            if (wallet.Amount < amount)
+            {
+                return false;
+            }
+
+            wallet.Amount -= amount;
+            await _walletEngine.Update(wallet);
+
+            return true;
+        }
+    }
+}
